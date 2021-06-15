@@ -1,39 +1,40 @@
 function [bayTraj, lunaTrajs, out3, out4, lunaImpactTs, lunaImpactPos] = DispersionAnalysisFun(g_,h_,satM_,bayM_, phi_, theta_, K_,DX_,k_,dx_,nCols_,nRows_,r_,RPS_)
-    G = [0,0,-g_];
-    h = h_;
+    G = [0,0,-g_];  % Gravity vector (from provided argument)
+    h = h_;         % Height above ground at t=0 (height at placement on lander)
     
-    satM = satM_;
-    bayM = bayM_;
+    satM = satM_;   % LunaSat Mass
+    bayM = bayM_;   % Bay Mass
     
-    phi = phi_*pi/180;
-    theta = theta_;
+    phi = phi_*pi/180;  % Launch angle in radians (argument provided as degrees)
+    theta = theta_;     % Rotation of bay at t=0 (assumed 0)
     
-    K = K_;
-    DX = DX_;
+    K = K_;     % Launch spring stiffness coeficent
+    DX = DX_;   % Launch spring displacement        
     
-    k = k_;
-    dx = dx_;
+    k = k_;     % Ejection spring stiffness coeficent
+    dx = dx_;   % Ejection spring displacement
     
-    nCols = nCols_;
-    nRows = nRows_;
+    nCols = nCols_; % Number of columns ("stacks") of LunaSats
+    nRows = nRows_; % Number of rows of LunaSat
     
-    r = r_;
-    RPS = RPS_;
+    r = r_;         % Ejection point distance from center relative to bay (0,0)
+    RPS = RPS_;     % Bay angular velocity in revolutions per second
     
     liv = (RPS)*2*pi*r;     % Lunasat Linear velocity magnitude
     
     % Calculations
     
-    rowM = nCols*satM;        % mass of a row of lunasats. 
+    rowM = nCols*satM;          % mass of a row of lunasats 
     satMTotal = nRows*rowM;     % mass of all lunasats
     M = bayM + satMTotal;       % total mass of lunasat bay (with all lunasats)
-    N = nCols * nRows;        % total number of lunasats
-    springPE = (1/2)*K*DX^2;            
+    N = nCols * nRows;          % total number of lunasats
+    springPE = (1/2)*K*DX^2;    % spring potential energy
     biv = sqrt(springPE * 2 / M);   % bay initial velocity calculation
     
-    rotx = @(t) [1 0 0; 0 cos(t) -sin(t) ; 0 sin(t) cos(t)] ;
-    roty = @(t) [cos(t) 0 sin(t) ; 0 1 0 ; -sin(t) 0  cos(t)] ;
-    rotz = @(t) [cos(t) -sin(t) 0 ; sin(t) cos(t) 0 ; 0 0 1] ;
+    % Rotation matrices as a function of theta
+    rotx = @(theta) [1 0 0; 0 cos(theta) -sin(theta) ; 0 sin(theta) cos(theta)] ;
+    roty = @(theta) [cos(theta) 0 sin(theta) ; 0 1 0 ; -sin(theta) 0  cos(theta)] ;
+    rotz = @(theta) [cos(theta) -sin(theta) 0 ; sin(theta) cos(theta) 0 ; 0 0 1] ;
     
     % Assume launch position on z axis
     Xb0 = [0,0,h];
@@ -88,7 +89,7 @@ function [bayTraj, lunaTrajs, out3, out4, lunaImpactTs, lunaImpactPos] = Dispers
     
     lunaImpactTs = zeros(1,4);
         
-  
+    
     disp("Test")
  
    %lunaImpactPos = [XL1(0,0);XL2(0,0);XL3(0,0);XL4(0,0)];
@@ -110,7 +111,7 @@ function [bayTraj, lunaTrajs, out3, out4, lunaImpactTs, lunaImpactPos] = Dispers
            impact = double(solve(eqn,t));
            impactT = impact(2);
            impactPOS = double(trajT(impactT));
-
+           disp(norm(double(trajT(impactT-1)-trajT(impactT))));
            lunaImpactPos(n,:) = impactPOS(:);
            %disp(impactT)
            disp(n);
